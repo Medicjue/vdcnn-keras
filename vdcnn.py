@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 import tensorflow as tf
 from keras.models import Sequential
-from keras.layers import Embedding, Conv1D, BatchNormalization, Activation, Dense, Lambda
+from keras.layers import Embedding, Conv1D, BatchNormalization, Activation, Dense, Lambda, Dropout
 from keras.layers.pooling import MaxPooling1D
 from keras.optimizers import SGD
 
-def create_model(num_classes, num_filters=[64, 128, 256, 512], top_k=3, learning_rate=0.01):
+def create_model(num_classes, num_filters=[64, 128, 256, 512], top_k=3, learning_rate=0.01, input_dim=69):
     model = Sequential()
     model.add(Embedding(input_dim=69, output_dim=16, input_length=1014, name='input_embedding'))
     model.add(Conv1D(filters=64, kernel_size=3, strides=2, padding="same"))
@@ -36,7 +36,9 @@ def create_model(num_classes, num_filters=[64, 128, 256, 512], top_k=3, learning
         return tf.reshape(k_max[0], (-1, num_filters[-1] * top_k))
     model.add(Lambda(_top_k, output_shape=(num_filters[-1] * top_k,)))
     model.add(Dense(2048, activation='relu', kernel_initializer='he_normal'))
+    model.add(Dropout(0.2, seed=23))
     model.add(Dense(2048, activation='relu', kernel_initializer='he_normal'))
+    model.add(Dropout(0.2, seed=23))
     model.add(Dense(num_classes, activation='softmax', name='output_layer'))
     sgd = SGD(lr=learning_rate, decay=1e-6, momentum=0.9, nesterov=False)
     model.summary()

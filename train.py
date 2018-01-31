@@ -4,8 +4,10 @@ import pandas as pd
 from utils import CharEmbeddedEncoder
 import numpy as np
 from datetime import datetime as dt
-
+import random
 from sklearn.metrics import confusion_matrix
+import gc
+
 
 def to_categorical(y, nb_classes=None):
     y = np.asarray(y, dtype='int32')
@@ -22,6 +24,9 @@ def to_categorical(y, nb_classes=None):
 
 
 def main():
+    random_seed = 23
+    epochs = 10
+    batch_size = 128
     s = dt.now()
     train_data = pd.read_csv('data/ag_news_csv/train.csv', index_col=False, header=None, names=['class', 'content'])
     test_data = pd.read_csv('data/ag_news_csv/test.csv', index_col=False, header=None, names=['class', 'content'])
@@ -42,11 +47,41 @@ def main():
     p = e - s
     print('Prepare Data consume:{}'.format(p))
     
-    model = vdcnn.create_model(num_classes=num_classes)
+    model = vdcnn.create_model(num_classes=num_classes, input_dim=encoder.char_dict_len)
     model.summary()
     
-    s = dt.now()
-    model.fit(train_X, train_Y, epochs=15, batch_size=128, validation_split=0.1, shuffle=True)
+    
+    
+    for epoch in range(epochs):
+        
+        shuffle_index = [i for i in range(len(train_X))]
+        random.seed = random_seed + epoch
+        random.shuffle(shuffle_index)
+        
+        tmp = []
+        for i in range(len(train_X)):
+            tmp.append(train_X[shuffle_index[i]])
+        train_X = np.asarray(tmp)
+        
+        tmp = []
+        for i in range(len(train_Y)):
+            tmp.append(train_Y[shuffle_index[i]])
+        train_Y = np.asarray(tmp)
+        del(tmp)
+        
+        for start_index in range(0, len(train_X), batch_size):
+            end_index = start_index + batch_size
+            if end_index > len(train_X):
+                end_index = len(train_X)
+            batch_train_X = train_X[start_index: end_index]
+            batch_train_Y = train_Y[start_index: end_index]
+            model.train_on_batch(x=batch_train_X, y=batch_train_Y)
+            del(batch_train_X)
+            del(batch_train_Y)
+            gc.collect()
+        print('Epoch {} completed'.format(epoch+1))
+#    s = dt.now()
+#    model.fit(train_X, train_Y, epochs=10, batch_size=128, validation_split=0.05, shuffle=True)
     e = dt.now()
     p = e - s
     print('Training Model consume:{}'.format(p))
