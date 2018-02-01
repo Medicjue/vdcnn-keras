@@ -1,3 +1,6 @@
 .spyproject/
 __pycache__/
 *.pyc
+figure/
+model/
+performance/

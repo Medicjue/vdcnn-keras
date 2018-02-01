@@ -8,6 +8,8 @@ import random
 from sklearn.metrics import confusion_matrix
 import gc
 
+import matplotlib.pyplot as plt
+
 
 def to_categorical(y, nb_classes=None):
     y = np.asarray(y, dtype='int32')
@@ -25,7 +27,7 @@ def to_categorical(y, nb_classes=None):
 
 def main():
     random_seed = 23
-    epochs = 10
+    epochs = 20
     batch_size = 128
     s = dt.now()
     train_data = pd.read_csv('data/ag_news_csv/train.csv', index_col=False, header=None, names=['class', 'content'])
@@ -51,7 +53,8 @@ def main():
     model.summary()
     
     
-    
+    losses = []
+    accuracies = []
     for epoch in range(epochs):
         
         shuffle_index = [i for i in range(len(train_X))]
@@ -69,22 +72,34 @@ def main():
         train_Y = np.asarray(tmp)
         del(tmp)
         
+        loss_of_epoch = []
+        acc_of_epoch = []
         for start_index in range(0, len(train_X), batch_size):
             end_index = start_index + batch_size
             if end_index > len(train_X):
                 end_index = len(train_X)
             batch_train_X = train_X[start_index: end_index]
             batch_train_Y = train_Y[start_index: end_index]
-            model.train_on_batch(x=batch_train_X, y=batch_train_Y)
+            rtn = model.train_on_batch(x=batch_train_X, y=batch_train_Y)
+            loss = rtn[0]
+            acc = rtn[1]
+            loss_of_epoch.append(loss)
+            acc_of_epoch.append(acc)
             del(batch_train_X)
             del(batch_train_Y)
             gc.collect()
-        print('Epoch {} completed'.format(epoch+1))
+        loss_of_epoch = np.mean(loss_of_epoch)
+        acc_of_epoch = np.mean(acc_of_epoch)
+        losses.append(loss_of_epoch)
+        accuracies.append(acc_of_epoch)
+        print('Epoch {} completed, loss - {}, acc - {}'.format(epoch+1, loss_of_epoch, acc_of_epoch))
 #    s = dt.now()
 #    model.fit(train_X, train_Y, epochs=10, batch_size=128, validation_split=0.05, shuffle=True)
     e = dt.now()
     p = e - s
     print('Training Model consume:{}'.format(p))
+    
+    model.save('model/ag_news_shuffle.mdl')
     
     s = dt.now()
     predict_Y = model.predict_classes(test_X)
@@ -93,6 +108,17 @@ def main():
     print('Predict consume:{}'.format(p))
     
     print(confusion_matrix(test_Y, predict_Y))
+    pd.DataFrame(confusion_matrix(test_Y, predict_Y)).to_csv('performance/ag_news_shuffle.csv')
+    
+    plt.plot(losses)
+    plt.savefig('figure/loss.png')
+    plt.close('all')
+    plt.clf()
+    
+    plt.plot(accuracies)
+    plt.savefig('figure/accuracy.png')
+    plt.close('all')
+    plt.clf()
     
 if __name__ == '__main__':
     main()
