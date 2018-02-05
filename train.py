@@ -30,8 +30,8 @@ def main():
     epochs = 20
     batch_size = 128
     s = dt.now()
-    train_data = pd.read_csv('data/ag_news_csv/train.csv', index_col=False, header=None, names=['class', 'content'])
-    test_data = pd.read_csv('data/ag_news_csv/test.csv', index_col=False, header=None, names=['class', 'content'])
+    train_data = pd.read_csv('data/ag_news_csv/train.csv', index_col=False, header=None, names=['class', 'title', 'content'])
+    test_data = pd.read_csv('data/ag_news_csv/test.csv', index_col=False, header=None, names=['class', 'title', 'content'])
     f = open('data/ag_news_csv/classes.txt', 'r')
     classes = [i.replace('\n','') for i in list(f)]
     num_classes = len(classes)
