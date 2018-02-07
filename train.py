@@ -27,7 +27,6 @@ def to_categorical(y, nb_classes=None):
 
 def main():
     random_seed = 23
-    epochs = 20
     batch_size = 128
     s = dt.now()
     train_data = pd.read_csv('data/ag_news_csv/train.csv', index_col=False, header=None, names=['class', 'title', 'content'])
@@ -55,7 +54,10 @@ def main():
     
     losses = []
     accuracies = []
-    for epoch in range(epochs):
+    epoch = 1
+    threshold = 0.99
+    acc_of_epoch = 0.0
+    while acc_of_epoch < threshold:
         
         shuffle_index = [i for i in range(len(train_X))]
         random.seed = random_seed + epoch
@@ -92,14 +94,23 @@ def main():
         acc_of_epoch = np.mean(acc_of_epoch)
         losses.append(loss_of_epoch)
         accuracies.append(acc_of_epoch)
-        print('Epoch {} completed, loss - {}, acc - {}'.format(epoch+1, loss_of_epoch, acc_of_epoch))
-#    s = dt.now()
-#    model.fit(train_X, train_Y, epochs=10, batch_size=128, validation_split=0.05, shuffle=True)
+        print('Epoch {} completed, loss - {}, acc - {}'.format(epoch, loss_of_epoch, acc_of_epoch))
+        if epoch % 10 == 0:
+            model.save('model/ag_news_shuffle_e{}.mdl'.format(epoch))
+            plt.plot(losses)
+            plt.savefig('figure/loss_e{}.png'.format(epoch))
+            plt.close('all')
+            plt.clf()
+            plt.plot(accuracies)
+            plt.savefig('figure/accuracy_e{}.png'.format(epoch))
+            plt.close('all')
+            plt.clf()
+        epoch += 1
     e = dt.now()
     p = e - s
     print('Training Model consume:{}'.format(p))
     
-    model.save('model/ag_news_shuffle.mdl')
+    model.save('model/ag_news_shuffle_e{}.mdl'.format(epoch))
     
     s = dt.now()
     predict_Y = model.predict_classes(test_X)
