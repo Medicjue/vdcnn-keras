@@ -4,3 +4,4 @@ __pycache__/
 figure/
 model/
 performance/
+.ipynb_checkpoints/
