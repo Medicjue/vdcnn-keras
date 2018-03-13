@@ -95,6 +95,7 @@ def main():
         losses.append(loss_of_epoch)
         accuracies.append(acc_of_epoch)
         print('Epoch {} completed, loss - {}, acc - {}'.format(epoch, loss_of_epoch, acc_of_epoch))
+        break
         if epoch % 10 == 0:
             model.save('model/ag_news_shuffle_e{}.mdl'.format(epoch))
             plt.plot(losses)
